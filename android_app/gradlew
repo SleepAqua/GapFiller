@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+DIST_URL="https://services.gradle.org/distributions/gradle-8.7-bin.zip"
+WRAPPER_DIR="$(dirname "$0")/.gradle-wrapper"
+GRADLE_DIR="$WRAPPER_DIR/gradle-8.7"
+
+if [ ! -x "$GRADLE_DIR/bin/gradle" ]; then
+  echo "Gradle distribution not found. Downloading..."
+  mkdir -p "$WRAPPER_DIR"
+  curl -sSL "$DIST_URL" -o "$WRAPPER_DIR/gradle.zip"
+  unzip -q "$WRAPPER_DIR/gradle.zip" -d "$WRAPPER_DIR"
+fi
+
+"$GRADLE_DIR/bin/gradle" "$@"
