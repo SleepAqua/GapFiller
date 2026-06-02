@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Yahtzee Real-time Simulation</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+    <style>body{font-family:Arial;margin:20px}</style>
+  </head>
+  <body>
+    <h3>Real-time Yahtzee Simulation</h3>
+    <div id="chart"></div>
+    <script>
+      const socket = io();
+      let strategies = null;
+      let means = {};
+      let layout = {title: 'Cumulative mean score', yaxis:{range:[0,600]}};
+
+      socket.on('connect', () => console.log('connected'));
+      socket.on('chunk', (data) => {
+        const snap = data.snapshot;
+        strategies = Object.keys(snap).sort();
+        strategies.forEach(s => means[s] = snap[s]);
+        const x = strategies;
+        const y = strategies.map(s => means[s]);
+        const trace = [{x:x, y:y, type:'bar'}];
+        Plotly.react('chart', trace, layout);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "random": [
+    { "cond": { "roll": [1,2,3] }, "action": { "keep_values": [] } },
+    { "cond": { "roll": 3 }, "action": { "score_category": "chance" } }
+  ],
+  "chase_yahtzee": [
+    { "cond": { "roll": [1,2] , "min_most_common": 2 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3 }, "action": { "score_category": "yahtzee" } }
+  ],
+  "heuristic_benchmark": [
+    { "cond": { "roll": [1,2], "min_most_common": 3 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": [1,2], "min_most_common": 2 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3 }, "action": { "score_category": "full_house" } }
+  ]
+}
