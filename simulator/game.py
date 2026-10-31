@@ -18,6 +18,7 @@ from .yahtzee import (
     N_CATEGORIES,
     UPPER_BONUS,
     UPPER_BONUS_THRESHOLD,
+    UPPER_CATEGORIES,
     YAHTZEE_BONUS,
     best_category_score,
     is_yahtzee,
@@ -25,6 +26,7 @@ from .yahtzee import (
 )
 
 MAX_ROLLS = 3
+UPPER_SECTION = frozenset(UPPER_CATEGORIES)
 DICE_PER_GAME = N_CATEGORIES * MAX_ROLLS * 5  # 195 die values per game
 
 
@@ -44,15 +46,31 @@ class GameResult:
         return self.category_sum + self.upper_bonus + YAHTZEE_BONUS * self.extra_yahtzees
 
 
+OPTIMAL_MARKER = "optimal"
+
+
 class Strategy:
-    """A named rule set. ``rules`` stays the raw list so it can be pickled."""
+    """A named policy.
+
+    ``rules`` is a rule list (picklable, so workers can rebuild the strategy) or
+    the marker ``"optimal"``, which selects the solved dynamic-programming policy
+    instead of a hand-written rule set.
+    """
 
     __slots__ = ("name", "rules", "engine")
 
-    def __init__(self, name: str, rules: Iterable[dict]):
+    def __init__(self, name: str, rules: Iterable[dict] | str):
         self.name = name
-        self.rules = list(rules)
-        self.engine = RuleEngine(self.rules)
+        if isinstance(rules, str):
+            if rules != OPTIMAL_MARKER:
+                raise ValueError(f"unknown policy marker: {rules!r}")
+            from .optimal import OptimalPolicy
+
+            self.rules = OPTIMAL_MARKER
+            self.engine = OptimalPolicy()
+        else:
+            self.rules = list(rules)
+            self.engine = RuleEngine(self.rules)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"Strategy({self.name!r}, {len(self.rules)} rules)"
@@ -82,6 +100,7 @@ def play_game(strategy: Strategy, dice_source: Iterator[int] | object) -> GameRe
     scores: dict[str, int] = {}
     extra_yahtzees = 0
     yahtzee_scored = False
+    upper_so_far = 0
     state = {"roll": 1, "dice": [1, 2, 3, 4, 5], "open_categories": frozenset(), "rolls_left": 2}
 
     for _turn in range(N_CATEGORIES):
@@ -95,6 +114,8 @@ def play_game(strategy: Strategy, dice_source: Iterator[int] | object) -> GameRe
             state["counts"] = counts
             state["open_categories"] = open_set
             state["rolls_left"] = MAX_ROLLS - roll_num
+            state["upper"] = upper_so_far
+            state["yahtzee_fifty"] = yahtzee_scored
             keep = engine.decide_keep(state)
             if keep[0] or keep[1] or keep[2] or keep[3] or keep[4]:
                 dice = [dice[0] if keep[0] else nxt(),
@@ -110,6 +131,8 @@ def play_game(strategy: Strategy, dice_source: Iterator[int] | object) -> GameRe
         state["dice"] = dice
         state["counts"] = counts
         state["rolls_left"] = 0
+        state["upper"] = upper_so_far
+        state["yahtzee_fifty"] = yahtzee_scored
         choice = engine.decide_score(state)
         if choice is not None and choice[0] in open_set:
             category, take_zero = choice
@@ -123,6 +146,8 @@ def play_game(strategy: Strategy, dice_source: Iterator[int] | object) -> GameRe
             extra_yahtzees += 1
 
         scores[category] = score
+        if category in UPPER_SECTION:
+            upper_so_far += score
         if category == "yahtzee":
             yahtzee_scored = score == 50
         open_cats.remove(category)

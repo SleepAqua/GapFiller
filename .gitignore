@@ -10,6 +10,7 @@ dist/
 *.egg-info/
 
 # Generated output
+data/optimal_values.npz
 results.html
 demo.html
 *.json.bak

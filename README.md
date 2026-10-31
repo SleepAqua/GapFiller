@@ -21,8 +21,9 @@ random                  20,000   111.60   0.20    0.0%   343     31
 cd ~/coding/GapFiller
 
 ./run.sh --rounds 20000 --chunk 2000            # table + results.html chart
+./run.sh --rounds 20000 --optimal               # include solved optimal play
 ./run.sh --rounds 1000000 --chunk 10000 --workers 8 --no-viz
-./run.sh test                                   # 48 unit tests
+./run.sh test                                   # 53 unit tests
 ```
 
 `./run.sh` pins the interpreter to `/home/louis/.venvs/main/bin/python`; override
@@ -44,6 +45,46 @@ only). See `requirements.txt`.
 - Results stream back as cumulative means per chunk, which is what the animated
   chart plays back.
 
+## The optimal strategy
+
+Yahtzee's best play is known: solitaire Yahtzee was solved exactly, and perfect
+play is worth **254.587729** points per game under Hasbro rules with the forced
+joker (Verhoeff; reproduced by the reference solvers). No rule list can reach it,
+because the right move depends on the whole scorecard, not on the dice alone.
+
+So this project solves the game instead of imitating it:
+`simulator/optimal.py` runs a dynamic program over
+
+    state = (scored categories, upper subtotal capped at 63, Yahtzee box holds 50, dice)
+
+with all 252 dice outcomes and all 462 keeps enumerated exactly — no sampling.
+That is 8128 masks x 64 subtotal buckets x 2 flags, solved in one pass; the value
+function is cached to `data/optimal_values.npz` (a solve takes 4-8 minutes,
+once; `python -m simulator.optimal --force` rebuilds it).
+
+Result for **this engine's ruleset**: perfect play is worth **253.97** points.
+A 20 000-game run of the solved policy measures **253.68 ± 0.41**, so the value
+function and the replay agree.
+
+| strategy | mean | se | upper bonus | best | worst |
+|---|---|---|---|---|---|
+| **optimal (solved)** | **253.68** | 0.41 | **68.1%** | 672 | 90 |
+| high_faces | 138.19 | 0.28 | 0.8% | 498 | 37 |
+| heuristic_benchmark | 130.12 | 0.41 | 1.7% | 693 | 39 |
+| chase_yahtzee | 118.53 | 0.27 | 3.8% | 828 | 40 |
+| random | 111.60 | 0.20 | 0.0% | 343 | 31 |
+
+Three things that fall out of this:
+
+- The best hand-written rule set in this repo is worth **84 points less** than
+  perfect play — 45% of the total. Greedy rules leave most of the game on the table.
+- Optimal play earns the upper bonus in **68%** of games; every rule strategy
+  here manages 0–4%. The bonus is not a side effect of good rolls, it is a plan.
+- The published 254.59 is 0.62 above this engine's 253.97 because that ruleset
+  pays joker values (25/30/40) for a Yahtzee placed in full house / small / large
+  straight, which this engine scores as 0. The gap is the missing rule, not an
+  error in the solver.
+
 ## CLI
 
 | flag | meaning |
@@ -55,6 +96,7 @@ only). See `requirements.txt`.
 | `--strategies` | JSON file of rules (default `examples/strategies.json`) |
 | `--out` | animated chart path (default `results.html`, ~4.7 MB: plotly JS is embedded so it opens offline) |
 | `--no-viz` | skip the chart |
+| `--optimal` | add the solved optimal policy to the comparison |
 | `--json` | write `{meta, summary, series}` for further analysis |
 
 ## Determinism and fairness
@@ -92,9 +134,11 @@ simulator/
   rules.py     rule DSL: conditions, actions, validation, compiled predicates
   game.py      one 13-turn game, dice from an iterator
   simulate.py  block seeding, process pool, aggregation, streaming
+  optimal.py   exact dynamic-programming solver + replayable policy
   cli.py       argument parsing, table output, JSON export
 viz/animate.py plotly chart, with a self-contained HTML fallback
-tests/         48 unit tests: scoring, DSL, determinism, aggregation, CLI, chart
+tests/         53 unit tests: scoring, DSL, determinism, aggregation, CLI, chart,
+               and the optimal solver/replay agreement
 examples/strategies.json
 ```
 

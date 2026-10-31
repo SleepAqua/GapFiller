@@ -37,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default="results.html", help="animated chart output")
     parser.add_argument("--no-viz", action="store_true", help="skip the chart")
     parser.add_argument("--json", dest="json_out", help="write series + summary as JSON")
+    parser.add_argument(
+        "--optimal",
+        action="store_true",
+        help="also play the solved optimal policy (solves and caches on first use)",
+    )
     args = parser.parse_args(argv)
 
     if args.rounds <= 0:
@@ -48,6 +53,9 @@ def main(argv: list[str] | None = None) -> int:
     if not path.exists():
         parser.error(f"strategy file not found: {path}")
     spec = json.loads(path.read_text(encoding="utf-8"))
+    if args.optimal:
+        spec = dict(spec)
+        spec.setdefault("optimal", "optimal")
     try:
         strategies = load_strategies(spec)
     except ValueError as exc:  # a bad rule should read like a config error
