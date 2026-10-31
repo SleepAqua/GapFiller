@@ -12,6 +12,8 @@ Conditions (all optional, all must hold):
     min_count_of_face {"face": n, "count": m} or [[face, count], ...]
     min_most_common  int -- the most frequent face appears at least this often
     max_rolls_left   int -- only if at most this many re-rolls remain
+    upper_below      int -- upper-section subtotal so far is below this
+    upper_at_least   int -- upper-section subtotal so far has reached this
 
 Actions (exactly one per rule):
 
@@ -37,6 +39,8 @@ KNOWN_CONDITIONS = {
     "min_count_of_face",
     "min_most_common",
     "max_rolls_left",
+    "upper_below",
+    "upper_at_least",
 }
 KNOWN_ACTIONS = {
     "keep_values",
@@ -111,6 +115,12 @@ class Rule:
         if key == "max_rolls_left":
             limit = int(value)
             return lambda state: state.get("rolls_left", 0) <= limit
+        if key == "upper_below":
+            limit = int(value)
+            return lambda state: state.get("upper", 0) < limit
+        if key == "upper_at_least":
+            limit = int(value)
+            return lambda state: state.get("upper", 0) >= limit
         raise ValueError(f"unhandled condition: {key}")
 
     def matches(self, state: dict) -> bool:

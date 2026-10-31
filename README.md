@@ -23,7 +23,7 @@ cd ~/coding/GapFiller
 ./run.sh --rounds 20000 --chunk 2000            # table + results.html chart
 ./run.sh --rounds 20000 --optimal               # include solved optimal play
 ./run.sh --rounds 1000000 --chunk 10000 --workers 8 --no-viz
-./run.sh test                                   # 53 unit tests
+./run.sh test                                   # 54 unit tests
 ```
 
 `./run.sh` pins the interpreter to `/home/louis/.venvs/main/bin/python`; override
@@ -69,6 +69,7 @@ function and the replay agree.
 | strategy | mean | se | upper bonus | best | worst |
 |---|---|---|---|---|---|
 | **optimal (solved)** | **253.68** | 0.41 | **68.1%** | 672 | 90 |
+| upper_plan | 156.16 | 0.40 | 5.0% | 657 | 49 |
 | high_faces | 138.19 | 0.28 | 0.8% | 498 | 37 |
 | heuristic_benchmark | 130.12 | 0.41 | 1.7% | 693 | 39 |
 | chase_yahtzee | 118.53 | 0.27 | 3.8% | 828 | 40 |
@@ -76,8 +77,9 @@ function and the replay agree.
 
 Three things that fall out of this:
 
-- The best hand-written rule set in this repo is worth **84 points less** than
-  perfect play — 45% of the total. Greedy rules leave most of the game on the table.
+- The best hand-written rule set in this repo (`upper_plan`, found by searching
+  72 configurations) is worth **97 points less** than perfect play — 38% of the
+  total. Greedy rules leave most of the game on the table.
 - Optimal play earns the upper bonus in **68%** of games; every rule strategy
   here manages 0–4%. The bonus is not a side effect of good rolls, it is a plan.
 - The published 254.59 is 0.62 above this engine's 253.97 because that ruleset
@@ -137,8 +139,9 @@ simulator/
   optimal.py   exact dynamic-programming solver + replayable policy
   cli.py       argument parsing, table output, JSON export
 viz/animate.py plotly chart, with a self-contained HTML fallback
-tests/         53 unit tests: scoring, DSL, determinism, aggregation, CLI, chart,
+tests/         54 unit tests: scoring, DSL, determinism, aggregation, CLI, chart,
                and the optimal solver/replay agreement
+docs/STRATEGIES.md  every strategy explained, plus the DSL-vs-optimal gap
 examples/strategies.json
 ```
 
@@ -152,8 +155,8 @@ A strategy is a list of rules; the first matching rule wins.
 ```
 
 Conditions: `roll`, `category_open`, `min_count_of_face`, `min_most_common`,
-`max_rolls_left`. Actions: `keep_values`, `keep_most_common`, `keep_top`,
-`score_category`, `score_best`, `score_zero`.
+`max_rolls_left`, `upper_below`, `upper_at_least`. Actions: `keep_values`,
+`keep_most_common`, `keep_top`, `score_category`, `score_best`, `score_zero`.
 
 Unknown keys raise at load time — a typo fails loudly instead of producing a rule
 that never fires.
@@ -167,10 +170,14 @@ Not modelled: the official "Joker" placement rules for a Yahtzee rolled after th
 Yahtzee box is used (the roll simply scores wherever the strategy sends it), and
 scratch/zero strategy is up to the rule author.
 
-A finding worth knowing: greedy policies almost never earn the upper bonus
-(0.8–3.8% of games here). Reaching 63 means spending early turns on ones and twos,
-which costs more than 35 points under any best-value policy — the bonus is a
-targeted plan, not a side effect.
+A finding worth knowing: rule-based policies almost never earn the upper bonus
+(0.8–5% of games here), because reaching 63 means spending early turns on ones and
+twos and a first-match rule list has no way to price that trade. The solved
+policy takes it in 68% of games. The bonus is a plan, not a side effect.
+
+Every strategy, its rules and what it scores: **`docs/STRATEGIES.md`** — including
+a measured answer to "can the optimal strategy just be written as JSON?" (no:
+the best of 72 rule configurations reaches 156.16, 62% of optimal).
 
 ## Live view
 

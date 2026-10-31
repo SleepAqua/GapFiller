@@ -17,6 +17,18 @@
     { "cond": { "roll": 3 }, "action": { "score_best": true } }
   ],
 
+  "upper_plan": [
+    { "cond": { "roll": [1, 2], "upper_below": 63, "category_open": "sixes", "min_count_of_face": { "face": 6, "count": 1 } }, "action": { "keep_values": [6] } },
+    { "cond": { "roll": [1, 2], "upper_below": 63, "category_open": "fives", "min_count_of_face": { "face": 5, "count": 1 } }, "action": { "keep_values": [5, 6] } },
+    { "cond": { "roll": [1, 2], "min_most_common": 2 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3, "category_open": "yahtzee", "min_most_common": 5 }, "action": { "score_category": "yahtzee" } },
+    { "cond": { "roll": 3, "upper_below": 55, "category_open": "sixes", "min_count_of_face": { "face": 6, "count": 4 } }, "action": { "score_category": "sixes" } },
+    { "cond": { "roll": 3, "upper_below": 55, "category_open": "fives", "min_count_of_face": { "face": 5, "count": 4 } }, "action": { "score_category": "fives" } },
+    { "cond": { "roll": 3, "upper_below": 55, "category_open": "fours", "min_count_of_face": { "face": 4, "count": 4 } }, "action": { "score_category": "fours" } },
+    { "cond": { "roll": 3, "upper_below": 55, "category_open": "threes", "min_count_of_face": { "face": 3, "count": 4 } }, "action": { "score_category": "threes" } },
+    { "cond": { "roll": 3 }, "action": { "score_best": true } }
+  ],
+
   "high_faces": [
     { "cond": { "roll": [1, 2], "min_count_of_face": { "face": 6, "count": 2 } }, "action": { "keep_values": [6] } },
     { "cond": { "roll": [1, 2], "min_count_of_face": { "face": 5, "count": 2 } }, "action": { "keep_values": [5] } },

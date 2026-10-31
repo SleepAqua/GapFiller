@@ -57,6 +57,14 @@ class MatchingTests(unittest.TestCase):
         self.assertTrue(rule.matches(state([5, 5, 1, 2, 3])))
         self.assertFalse(rule.matches(state([5, 4, 1, 2, 3])))
 
+    def test_upper_conditions_read_scorecard_progress(self):
+        rule = Rule({"upper_below": 63}, {"keep_values": [6]})
+        self.assertTrue(rule.matches(dict(state([6, 1, 2, 3, 4]), upper=0)))
+        self.assertTrue(rule.matches(dict(state([6, 1, 2, 3, 4]), upper=62)))
+        self.assertFalse(rule.matches(dict(state([6, 1, 2, 3, 4]), upper=63)))
+        reached = Rule({"upper_at_least": 63}, {"score_best": True})
+        self.assertTrue(reached.matches(dict(state([6, 1, 2, 3, 4]), upper=63)))
+
     def test_max_rolls_left(self):
         rule = Rule({"max_rolls_left": 0}, {"score_best": True})
         self.assertTrue(rule.matches(state([1, 2, 3, 4, 5], roll=3, rolls_left=0)))
