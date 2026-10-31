@@ -35,6 +35,11 @@ LOWER_CATEGORIES = (
 )
 ALL_CATEGORIES = UPPER_CATEGORIES + LOWER_CATEGORIES
 
+# A Yahtzee rolled after the Yahtzee box already holds 50 scores 25/30/40 in the
+# full house and straight boxes under the Hasbro "joker" rule. Those boxes would
+# otherwise pay 0 for five of a kind.
+JOKER_VALUES = {"full_house": 25, "small_straight": 30, "large_straight": 40}
+
 UPPER_BONUS = 35
 UPPER_BONUS_THRESHOLD = 63
 YAHTZEE_BONUS = 100
@@ -91,6 +96,13 @@ def chance(dice: Sequence[int]) -> int:
 
 def is_yahtzee(dice: Sequence[int]) -> bool:
     return len(set(dice)) == 1
+
+
+def joker_value(category: str, dice: Sequence[int]) -> int:
+    """Value of ``category`` under the joker rule, or 0 if it does not apply."""
+    if category not in JOKER_VALUES or not is_yahtzee(dice):
+        return 0
+    return JOKER_VALUES[category]
 
 
 def score_category(category: str, dice: Sequence[int]) -> int:

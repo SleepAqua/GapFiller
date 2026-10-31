@@ -47,6 +47,7 @@ import numpy as np
 
 from .yahtzee import (
     ALL_CATEGORIES,
+    JOKER_VALUES,
     UPPER_BONUS,
     UPPER_BONUS_THRESHOLD,
     YAHTZEE_BONUS,
@@ -60,7 +61,7 @@ UPPER_IDX = [CATEGORY_INDEX[c] for c in UPPER_CATS]
 LOWER_IDX = [CATEGORY_INDEX[c] for c in ALL_CATEGORIES[6:]]
 YAHTZEE_IDX = CATEGORY_INDEX["yahtzee"]
 UPPER_ALL_MASK = sum(1 << i for i in UPPER_IDX)
-CACHE_VERSION = 6
+CACHE_VERSION = 7
 UPPER_BUCKETS = 64  # capped 0..63
 
 
@@ -228,6 +229,9 @@ def solve(progress: bool = False) -> dict:
 
                     if flag:
                         candidate = candidate + YAHTZEE_BONUS * IS_YAHTZEE[:, None]
+                        joker = JOKER_VALUES.get(ALL_CATEGORIES[cat_idx])
+                        if joker:
+                            candidate = np.maximum(candidate, joker * IS_YAHTZEE[:, None])
                     columns = np.maximum(columns, candidate)
 
                 per_keep = TRANSITION @ columns           # (keeps, buckets)
@@ -254,7 +258,7 @@ def cache_path() -> Path:
 
 def rules_key() -> str:
     return hashlib.sha256(
-        json.dumps([UPPER_BONUS, UPPER_BONUS_THRESHOLD, YAHTZEE_BONUS, CACHE_VERSION, "free-joker"]).encode()
+        json.dumps([UPPER_BONUS, UPPER_BONUS_THRESHOLD, YAHTZEE_BONUS, CACHE_VERSION, "joker-values"]).encode()
     ).hexdigest()[:12]
 
 
@@ -328,6 +332,9 @@ class OptimalPolicy:
 
             if flag_:
                 candidate = candidate + YAHTZEE_BONUS * IS_YAHTZEE
+                joker = JOKER_VALUES.get(ALL_CATEGORIES[cat_idx])
+                if joker:
+                    candidate = np.maximum(candidate, joker * IS_YAHTZEE)
 
             better = candidate > columns
             best_cat = np.where(better, np.int8(cat_idx), best_cat)

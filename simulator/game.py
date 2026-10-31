@@ -20,6 +20,8 @@ from .yahtzee import (
     UPPER_BONUS_THRESHOLD,
     UPPER_CATEGORIES,
     YAHTZEE_BONUS,
+    is_yahtzee,
+    joker_value,
     best_category_score,
     is_yahtzee,
     score_with,
@@ -137,8 +139,12 @@ def play_game(strategy: Strategy, dice_source: Iterator[int] | object) -> GameRe
         if choice is not None and choice[0] in open_set:
             category, take_zero = choice
             score = 0 if take_zero else score_with(category, dice)
+            if yahtzee_scored and is_yahtzee(dice):
+                score = max(score, joker_value(category, dice))
         else:
             category, score = best_category_score(dice, open_set)
+            if yahtzee_scored and is_yahtzee(dice):
+                score = max(score, joker_value(category, dice))
 
         # A Yahtzee rolled after the Yahtzee box holds 50 earns the 100 bonus,
         # whichever category it is used for.
