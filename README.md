@@ -53,7 +53,7 @@ only). See `requirements.txt`.
 | `--seed` | seed for the whole run (default 0) |
 | `--workers` | processes; `0` means all cores |
 | `--strategies` | JSON file of rules (default `examples/strategies.json`) |
-| `--out` | animated chart path (default `results.html`) |
+| `--out` | animated chart path (default `results.html`, ~4.7 MB: plotly JS is embedded so it opens offline) |
 | `--no-viz` | skip the chart |
 | `--json` | write `{meta, summary, series}` for further analysis |
 
