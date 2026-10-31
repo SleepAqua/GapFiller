@@ -45,6 +45,9 @@ class PlotlyTests(unittest.TestCase):
             build_animation(SERIES, out_html=str(target))
             html = target.read_text()
         self.assertIn("Plotly.newPlot", html)
+        self.assertIn("addFrames", html)
+        # plotly >= 7 drops frames from write_html; the page must still carry them
+        self.assertIn('"frames"', html)
         self.assertIn("alpha", html)
 
     def test_build_animation_works_without_plotly(self):

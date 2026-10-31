@@ -107,8 +107,43 @@ def build_animation(results: dict[str, list[dict]], out_html: str = "results.htm
             )
         ],
     )
-    figure.write_html(out_html, auto_open=False, include_plotlyjs="cdn")
-    return out_html
+    # plotly >= 7 drops ``frames`` from write_html, so the page is assembled
+    # here: newPlot for the first frame, then addFrames plus a play button.
+    payload = json.dumps(figure.to_plotly_json(), separators=(",", ":"))
+    html = (_PLOTLY_TEMPLATE
+            .replace("__PLOTLYJS__", _plotly_script_tag())
+            .replace("__PLOT__", payload))
+    target = Path(out_html)
+    target.write_text(html, encoding="utf-8")
+    return str(target)
+
+
+def _plotly_script_tag() -> str:
+    """Embed plotly so the report opens without a network connection."""
+    try:
+        from plotly.offline import get_plotlyjs
+
+        return f"<script>{get_plotlyjs()}</script>"
+    except Exception:  # pragma: no cover - fall back to the CDN
+        return '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+
+
+_PLOTLY_TEMPLATE = """<!doctype html>
+<meta charset="utf-8">
+<title>Yahtzee strategy comparison</title>
+<style>html,body{height:100%;margin:0;background:#111418}</style>
+__PLOTLYJS__
+<div id="chart" style="width:100%;height:100vh"></div>
+<script>
+const plot = __PLOT__;
+Plotly.newPlot('chart', plot.data, plot.layout, {responsive: true}).then(() => {
+  if (plot.frames && plot.frames.length) {
+    return Plotly.addFrames('chart', plot.frames);
+  }
+});
+</script>
+</html>
+"""
 
 
 _FALLBACK_TEMPLATE = """<!doctype html>
