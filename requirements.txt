@@ -1,7 +1,8 @@
-numpy
-pandas
-plotly
-tqdm
+# core
+numpy            # bulk dice draws
+plotly           # animated chart (a plain-HTML fallback exists without it)
+
+# live websocket view only (./run.sh serve)
 flask
 flask-socketio
 eventlet

@@ -1,25 +1,11 @@
-import json
-from simulate import Strategy, simulate
-from viz.animate import build_animation
-import argparse
+#!/usr/bin/env python3
+"""Run a batch of games and write the animated comparison.
 
-def load_strategies(path):
-    with open(path) as f:
-        spec = json.load(f)
-    return [Strategy(name, rules) for name, rules in spec.items()]
+    ./run.sh --rounds 200000 --workers 8
+    ./run.sh --rounds 50000 --chunk 500 --json results.json --no-viz
+"""
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--strategies', default='examples/strategies.json')
-    parser.add_argument('--rounds', type=int, default=10000)
-    parser.add_argument('--chunk', type=int, default=1000)
-    parser.add_argument('--out', default='results.html')
-    args = parser.parse_args()
+from simulator.cli import main
 
-    strategies = load_strategies(args.strategies)
-    res = simulate(strategies, args.rounds, chunk=args.chunk)
-    out = build_animation(res, out_html=args.out)
-    print('Wrote animation to', out)
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    raise SystemExit(main())

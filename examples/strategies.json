@@ -1,15 +1,28 @@
 {
   "random": [
-    { "cond": { "roll": [1,2,3] }, "action": { "keep_values": [] } },
-    { "cond": { "roll": 3 }, "action": { "score_category": "chance" } }
+    { "cond": { "roll": [1, 2, 3] }, "action": { "keep_values": [] } },
+    { "cond": { "roll": 3 }, "action": { "score_best": true } }
   ],
+
   "chase_yahtzee": [
-    { "cond": { "roll": [1,2] , "min_most_common": 2 }, "action": { "keep_most_common": true } },
-    { "cond": { "roll": 3 }, "action": { "score_category": "yahtzee" } }
+    { "cond": { "roll": [1, 2], "min_most_common": 2 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3, "category_open": "yahtzee" }, "action": { "score_category": "yahtzee" } },
+    { "cond": { "roll": 3 }, "action": { "score_best": true } }
   ],
+
   "heuristic_benchmark": [
-    { "cond": { "roll": [1,2], "min_most_common": 3 }, "action": { "keep_most_common": true } },
-    { "cond": { "roll": [1,2], "min_most_common": 2 }, "action": { "keep_most_common": true } },
-    { "cond": { "roll": 3 }, "action": { "score_category": "full_house" } }
+    { "cond": { "roll": [1, 2], "min_most_common": 3 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": [1, 2], "min_most_common": 2 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3, "category_open": "full_house" }, "action": { "score_category": "full_house" } },
+    { "cond": { "roll": 3 }, "action": { "score_best": true } }
+  ],
+
+  "high_faces": [
+    { "cond": { "roll": [1, 2], "min_count_of_face": { "face": 6, "count": 2 } }, "action": { "keep_values": [6] } },
+    { "cond": { "roll": [1, 2], "min_count_of_face": { "face": 5, "count": 2 } }, "action": { "keep_values": [5] } },
+    { "cond": { "roll": 3, "min_count_of_face": { "face": 6, "count": 3 }, "category_open": "sixes" }, "action": { "score_category": "sixes" } },
+    { "cond": { "roll": 3, "min_count_of_face": { "face": 5, "count": 3 }, "category_open": "fives" }, "action": { "score_category": "fives" } },
+    { "cond": { "roll": 3, "min_most_common": 3 }, "action": { "keep_most_common": true } },
+    { "cond": { "roll": 3 }, "action": { "score_best": true } }
   ]
 }
